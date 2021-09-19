@@ -1,0 +1,31 @@
+[package]
+authors = ["Chaoqian Xu <chaoranxu@gmail.com>"]
+edition = "2018"
+name = "maxwell-client"
+version = "0.5.0"
+
+[dependencies]
+config = "0.11.0"
+log = "0.4.14"
+log4rs = "1.0.0"
+
+tokio = { version = "1.11.0", features = ["full"] }
+futures-util = "0.3.15"
+futures-intrusive = "0.4.0"
+futures = "0.3"
+
+actix = "0.12.0"
+actix-codec = "0.4.0"
+actix-web = "4.0.0-beta.8"
+actix-web-actors = "4.0.0-beta.6"
+awc = "3.0.0-beta.7"
+
+ahash = "0.7.4"
+dashmap = "4.0.2"
+dycovec = "0.1.1"
+num_cpus = "1.13.0"
+bytes = "1.1.0"
+prost = "0.8.0"
+serde = "1.0.126"
+serde_derive = "1.0.126"
+maxwell-protocol = {git = "https://github.com/maxwell-dev/maxwell-protocol-rust.git", tag = "v0.6.6"}
