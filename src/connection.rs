@@ -396,7 +396,7 @@ pub enum ConnectionStatusChangedMsg {
 
 #[derive(Debug, ActixMessage)]
 #[rtype(result = "()")]
-pub struct SubscribeConnectionStatusMsg(Recipient<ConnectionStatusChangedMsg>);
+pub struct SubscribeConnectionStatusMsg(pub Recipient<ConnectionStatusChangedMsg>);
 
 impl Handler<SubscribeConnectionStatusMsg> for Connection {
     type Result = ();
@@ -410,7 +410,7 @@ impl Handler<SubscribeConnectionStatusMsg> for Connection {
 
 #[derive(Debug, ActixMessage)]
 #[rtype(result = "()")]
-pub struct UnsubscribeConnectionStatusMsg(Recipient<ConnectionStatusChangedMsg>);
+pub struct UnsubscribeConnectionStatusMsg(pub Recipient<ConnectionStatusChangedMsg>);
 
 impl Handler<UnsubscribeConnectionStatusMsg> for Connection {
     type Result = ();
