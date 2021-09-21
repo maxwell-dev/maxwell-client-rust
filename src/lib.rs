@@ -11,7 +11,11 @@ pub mod prelude {
     //! ```
     //! use maxwell_client::prelude::*;
     //! ```
-    pub use crate::connection::{
-        Connection, ProtocolMsgWrapper, SendError, StopMsg, TimeoutExt, Wrap,
+    pub use crate::{
+        connection::{
+            Connection, ConnectionStatusChangedMsg, ProtocolMsgWrapper, SendError, StopMsg,
+            SubscribeConnectionStatusMsg, TimeoutExt, UnsubscribeConnectionStatusMsg, Wrap,
+        },
+        connection_mgr::ConnectionMgr,
     };
 }
