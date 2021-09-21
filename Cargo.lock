@@ -961,7 +961,7 @@ checksum = "a3e378b66a060d48947b590737b30a1be76706c8dd7b8ba0f2fe3989c68a853f"
 
 [[package]]
 name = "maxwell-client"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "actix",
  "actix-codec",
@@ -979,6 +979,7 @@ dependencies = [
  "log",
  "log4rs",
  "maxwell-protocol",
+ "maxwell-utils",
  "num_cpus",
  "prost",
  "serde 1.0.129",
@@ -993,6 +994,16 @@ source = "git+https://github.com/maxwell-dev/maxwell-protocol-rust.git?tag=v0.6.
 dependencies = [
  "bytes",
  "prost",
+]
+
+[[package]]
+name = "maxwell-utils"
+version = "0.5.0"
+source = "git+https://github.com/maxwell-dev/maxwell-utils-rust.git?tag=v0.5.0#6b7d5e94012ba2fb845896cb67dbf9b23ea91628"
+dependencies = [
+ "actix",
+ "dycovec",
+ "num_cpus",
 ]
 
 [[package]]

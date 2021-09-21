@@ -14,7 +14,7 @@ use futures_util::{
 use maxwell_protocol::{self, ProtocolMsg, *};
 use std::{
     cell::{Cell, RefCell},
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     future::Future,
     pin::Pin,
     rc::Rc,
@@ -86,12 +86,13 @@ struct ConnectionInner {
     is_connected: Cell<bool>,
     round_attachments: RefCell<HashMap<u32, RoundAttachment>>,
     round_ref: Cell<u32>,
+    subscribers: RefCell<HashSet<Recipient<ConnectionStatusChangedMsg>>>,
     is_stopping: Cell<bool>,
 }
 
 impl ConnectionInner {
     #[inline]
-    fn new(endpoint: String) -> Self {
+    pub fn new(endpoint: String) -> Self {
         ConnectionInner {
             id: ID_SEED.fetch_add(1, Ordering::Relaxed),
             url: Self::build_url(&endpoint),
@@ -102,11 +103,12 @@ impl ConnectionInner {
             is_connected: Cell::new(false),
             round_attachments: RefCell::new(HashMap::new()),
             round_ref: Cell::new(0),
+            subscribers: RefCell::new(HashSet::new()),
             is_stopping: Cell::new(false),
         }
     }
 
-    async fn connect_repeatedly(self: Rc<Self>) {
+    pub async fn connect_repeatedly(self: Rc<Self>) {
         loop {
             if self.is_stopping() {
                 break;
@@ -137,7 +139,7 @@ impl ConnectionInner {
         }
     }
 
-    async fn send(self: Rc<Self>, mut msg: ProtocolMsg) -> Result<ProtocolMsg, SendError> {
+    pub async fn send(self: Rc<Self>, mut msg: ProtocolMsg) -> Result<ProtocolMsg, SendError> {
         let round_ref = self.next_round_ref();
         let round_completer = RoundCompleter::new(round_ref, Rc::clone(&self));
         let msg = maxwell_protocol::set_round_ref(&mut msg, round_ref);
@@ -156,7 +158,7 @@ impl ConnectionInner {
         Ok(round_completer.await)
     }
 
-    async fn receive_repeatedly(self: Rc<Self>) {
+    pub async fn receive_repeatedly(self: Rc<Self>) {
         loop {
             if self.is_stopping() {
                 break;
@@ -210,6 +212,26 @@ impl ConnectionInner {
     }
 
     #[inline]
+    pub fn stop(&self) {
+        self.is_stopping.set(true);
+    }
+
+    #[inline]
+    pub fn subscribe(&self, r: Recipient<ConnectionStatusChangedMsg>) {
+        self.subscribers.borrow_mut().insert(r);
+    }
+
+    #[inline]
+    pub fn unsubscribe(&self, r: Recipient<ConnectionStatusChangedMsg>) {
+        self.subscribers.borrow_mut().remove(&r);
+    }
+
+    #[inline]
+    fn build_url(endpoint: &str) -> String {
+        format!("ws://{}", endpoint)
+    }
+
+    #[inline]
     fn set_socket_pair(
         &self, sink: Option<SplitSink<Framed<BoxedSocket, Codec>, WSMessage>>,
         stream: Option<SplitStream<Framed<BoxedSocket, Codec>>>,
@@ -223,6 +245,7 @@ impl ConnectionInner {
         self.is_connected.set(true);
         self.connected_event.set();
         self.disconnected_event.reset();
+        self.notify(ConnectionStatusChangedMsg::Connected);
     }
 
     #[inline]
@@ -230,16 +253,12 @@ impl ConnectionInner {
         self.is_connected.set(false);
         self.connected_event.reset();
         self.disconnected_event.set();
+        self.notify(ConnectionStatusChangedMsg::Disconnected);
     }
 
     #[inline]
     fn is_connected(&self) -> bool {
         self.is_connected.get()
-    }
-
-    #[inline]
-    fn stop(&self) {
-        self.is_stopping.set(true);
     }
 
     #[inline]
@@ -259,8 +278,20 @@ impl ConnectionInner {
     }
 
     #[inline]
-    fn build_url(endpoint: &str) -> String {
-        format!("ws://{}", endpoint)
+    fn notify(&self, status: ConnectionStatusChangedMsg) {
+        let mut unavailables: Vec<Recipient<ConnectionStatusChangedMsg>> = Vec::new();
+        for s in &*self.subscribers.borrow() {
+            if s.connected() {
+                s.do_send(status.clone()).unwrap_or_else(|err| {
+                    log::warn!("Failed to notify: err: {:?}", &err);
+                });
+            } else {
+                unavailables.push(s.clone());
+            }
+        }
+        for s in &unavailables {
+            self.subscribers.borrow_mut().remove(s);
+        }
     }
 }
 
@@ -312,7 +343,8 @@ pub enum SendError {
     ProtocolError(WsProtocolError),
 }
 
-#[derive(Debug)]
+#[derive(Debug, ActixMessage)]
+#[rtype(result = "Result<ProtocolMsg, SendError>")]
 pub struct ProtocolMsgWrapper(ProtocolMsg);
 
 impl ProtocolMsgWrapper {
@@ -333,10 +365,6 @@ impl Wrap for ProtocolMsg {
     }
 }
 
-impl ActixMessage for ProtocolMsgWrapper {
-    type Result = Result<ProtocolMsg, SendError>;
-}
-
 impl Handler<ProtocolMsgWrapper> for Connection {
     type Result = ResponseFuture<Result<ProtocolMsg, SendError>>;
 
@@ -346,12 +374,9 @@ impl Handler<ProtocolMsgWrapper> for Connection {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, ActixMessage)]
+#[rtype(result = "()")]
 pub struct StopMsg;
-
-impl ActixMessage for StopMsg {
-    type Result = ();
-}
 
 impl Handler<StopMsg> for Connection {
     type Result = ();
@@ -359,6 +384,41 @@ impl Handler<StopMsg> for Connection {
     fn handle(&mut self, _msg: StopMsg, ctx: &mut Context<Self>) -> Self::Result {
         log::info!("Received StopMsg: actor: {}<{}>", &self.inner.url, &self.inner.id);
         ctx.stop();
+    }
+}
+
+#[derive(Debug, ActixMessage, Clone)]
+#[rtype(result = "()")]
+pub enum ConnectionStatusChangedMsg {
+    Connected,
+    Disconnected,
+}
+
+#[derive(Debug, ActixMessage)]
+#[rtype(result = "()")]
+pub struct SubscribeConnectionStatusMsg(Recipient<ConnectionStatusChangedMsg>);
+
+impl Handler<SubscribeConnectionStatusMsg> for Connection {
+    type Result = ();
+
+    fn handle(
+        &mut self, msg: SubscribeConnectionStatusMsg, _ctx: &mut Context<Self>,
+    ) -> Self::Result {
+        self.inner.subscribe(msg.0);
+    }
+}
+
+#[derive(Debug, ActixMessage)]
+#[rtype(result = "()")]
+pub struct UnsubscribeConnectionStatusMsg(Recipient<ConnectionStatusChangedMsg>);
+
+impl Handler<UnsubscribeConnectionStatusMsg> for Connection {
+    type Result = ();
+
+    fn handle(
+        &mut self, msg: UnsubscribeConnectionStatusMsg, _ctx: &mut Context<Self>,
+    ) -> Self::Result {
+        self.inner.unsubscribe(msg.0);
     }
 }
 

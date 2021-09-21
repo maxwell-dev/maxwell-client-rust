@@ -1,6 +1,7 @@
-use crate::{arbiter_pool::ArbiterPool, connection::Connection};
+use crate::connection::Connection;
 use actix::prelude::*;
 use dycovec::DycoVec;
+use maxwell_utils::ArbiterPool;
 use std::sync::{
     atomic::{AtomicU8, Ordering},
     Arc,

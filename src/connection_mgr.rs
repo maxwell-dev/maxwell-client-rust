@@ -1,7 +1,8 @@
-use crate::{arbiter_pool::ArbiterPool, connection::Connection, connection_pool::ConnectionPool};
+use crate::{connection::Connection, connection_pool::ConnectionPool};
 use actix::prelude::*;
 use ahash::RandomState;
 use dashmap::DashMap;
+use maxwell_utils::ArbiterPool;
 use std::sync::Arc;
 
 pub struct ConnectionMgr {
@@ -10,10 +11,10 @@ pub struct ConnectionMgr {
 }
 
 impl ConnectionMgr {
-    pub fn new() -> Self {
+    pub fn new(arbiter_pool: Arc<ArbiterPool>) -> Self {
         ConnectionMgr {
             mappings: DashMap::with_capacity_and_hasher(512, RandomState::new()),
-            arbiter_pool: Arc::new(ArbiterPool::new()),
+            arbiter_pool,
         }
     }
 
@@ -37,6 +38,7 @@ mod tests {
     use crate::{connection::Connection, connection_mgr::ConnectionMgr, prelude::Wrap};
     use actix::prelude::*;
     use maxwell_protocol::{IntoProtocol, PingReq};
+    use maxwell_utils::ArbiterPool;
     use std::{
         sync::Arc,
         time::{Duration, Instant},
@@ -46,7 +48,7 @@ mod tests {
     #[actix::test]
     async fn fetch_connection() {
         log4rs::init_file("config/log4rs.yaml", Default::default()).unwrap();
-        let connection_mgr = ConnectionMgr::new();
+        let connection_mgr = ConnectionMgr::new(Arc::new(ArbiterPool::new()));
         let endpoint = "localhost:8081";
         let mut connections: Vec<Arc<Addr<Connection>>> = Vec::new();
         let start = Instant::now();

@@ -1,4 +1,3 @@
-mod arbiter_pool;
 pub mod connection;
 pub mod connection_mgr;
 mod connection_pool;
