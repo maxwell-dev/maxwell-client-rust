@@ -387,7 +387,7 @@ impl Handler<StopMsg> for Connection {
     }
 }
 
-#[derive(Debug, ActixMessage, Clone)]
+#[derive(Debug, ActixMessage, Clone, PartialEq, Eq)]
 #[rtype(result = "()")]
 pub enum ConnectionStatusChangedMsg {
     Connected,
