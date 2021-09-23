@@ -218,6 +218,7 @@ impl ConnectionInner {
 
     #[inline]
     pub fn subscribe(&self, r: Recipient<ConnectionStatusChangedMsg>) {
+        self.notify_connected(&r);
         self.subscribers.borrow_mut().insert(r);
     }
 
@@ -245,7 +246,7 @@ impl ConnectionInner {
         self.is_connected.set(true);
         self.connected_event.set();
         self.disconnected_event.reset();
-        self.notify(ConnectionStatusChangedMsg::Connected);
+        self.notify_changed(ConnectionStatusChangedMsg::Connected);
     }
 
     #[inline]
@@ -253,7 +254,7 @@ impl ConnectionInner {
         self.is_connected.set(false);
         self.connected_event.reset();
         self.disconnected_event.set();
-        self.notify(ConnectionStatusChangedMsg::Disconnected);
+        self.notify_changed(ConnectionStatusChangedMsg::Disconnected);
     }
 
     #[inline]
@@ -278,7 +279,7 @@ impl ConnectionInner {
     }
 
     #[inline]
-    fn notify(&self, status: ConnectionStatusChangedMsg) {
+    fn notify_changed(&self, status: ConnectionStatusChangedMsg) {
         let mut unavailables: Vec<Recipient<ConnectionStatusChangedMsg>> = Vec::new();
         for s in &*self.subscribers.borrow() {
             if s.connected() {
@@ -291,6 +292,15 @@ impl ConnectionInner {
         }
         for s in &unavailables {
             self.subscribers.borrow_mut().remove(s);
+        }
+    }
+
+    #[inline]
+    fn notify_connected(&self, r: &Recipient<ConnectionStatusChangedMsg>) {
+        if self.is_connected() {
+            r.do_send(ConnectionStatusChangedMsg::Connected).unwrap_or_else(|err| {
+                log::warn!("Failed to notify: err: {:?}", &err);
+            });
         }
     }
 }
@@ -331,7 +341,7 @@ impl Actor for Connection {
         Running::Stop
     }
 
-    fn stopped(&mut self, _: &mut Context<Self>) {
+    fn stopped(&mut self, _: &mut Self::Context) {
         log::info!("Stopped: actor: {}<{}>", &self.inner.url, &self.inner.id);
     }
 }
@@ -339,7 +349,7 @@ impl Actor for Connection {
 #[derive(Debug)]
 pub enum SendError {
     Timeout,
-    MailboxClosed,
+    MailboxError(MailboxError),
     ProtocolError(WsProtocolError),
 }
 
@@ -442,7 +452,7 @@ impl TimeoutExt for Request<Connection, ProtocolMsgWrapper> {
                             Ok(res) => Ok(res),
                             Err(err) => Err(err),
                         },
-                        Err(_err) => Err(SendError::MailboxClosed),
+                        Err(err) => Err(SendError::MailboxError(err)),
                     },
                     Err(_err) => Err(SendError::Timeout),
                 },
