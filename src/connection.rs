@@ -283,9 +283,7 @@ impl ConnectionInner {
         let mut unavailables: Vec<Recipient<ConnectionStatusChangedMsg>> = Vec::new();
         for s in &*self.subscribers.borrow() {
             if s.connected() {
-                s.do_send(status.clone()).unwrap_or_else(|err| {
-                    log::warn!("Failed to notify: err: {:?}", &err);
-                });
+                s.do_send(status.clone());
             } else {
                 unavailables.push(s.clone());
             }
@@ -298,9 +296,7 @@ impl ConnectionInner {
     #[inline]
     fn notify_connected(&self, r: &Recipient<ConnectionStatusChangedMsg>) {
         if self.is_connected() {
-            r.do_send(ConnectionStatusChangedMsg::Connected).unwrap_or_else(|err| {
-                log::warn!("Failed to notify: err: {:?}", &err);
-            });
+            r.do_send(ConnectionStatusChangedMsg::Connected);
         }
     }
 }
