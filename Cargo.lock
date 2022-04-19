@@ -722,12 +722,11 @@ dependencies = [
 [[package]]
 name = "futures-intrusive"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "62007592ac46aa7c2b6416f7deb9a8a8f63a01e0f1d6e1787d5630170db2b63e"
+source = "git+https://github.com/Matthias247/futures-intrusive.git?branch=master#11e1e1c7dfa2a22057fd0848ec9fd7147ab2ef95"
 dependencies = [
  "futures-core",
  "lock_api",
- "parking_lot 0.11.2",
+ "parking_lot 0.12.0",
 ]
 
 [[package]]
@@ -1053,7 +1052,7 @@ checksum = "a3e378b66a060d48947b590737b30a1be76706c8dd7b8ba0f2fe3989c68a853f"
 
 [[package]]
 name = "maxwell-client"
-version = "0.7.0"
+version = "0.7.1"
 dependencies = [
  "actix",
  "actix-codec",
@@ -1081,8 +1080,8 @@ dependencies = [
 
 [[package]]
 name = "maxwell-protocol"
-version = "0.7.0"
-source = "git+https://github.com/maxwell-dev/maxwell-protocol-rust.git?tag=v0.7.0#07ea56a3f6e301c6c28945af00ae7b6fb18a9707"
+version = "0.8.0"
+source = "git+https://github.com/maxwell-dev/maxwell-protocol-rust.git?tag=v0.8.0#bb34113c7a712078cfa42ca52494437f49d49755"
 dependencies = [
  "actix",
  "bytes",

@@ -2,7 +2,7 @@
 authors = ["Chaoqian Xu <chaoranxu@gmail.com>"]
 edition = "2021"
 name = "maxwell-client"
-version = "0.7.0"
+version = "0.7.1"
 
 [dependencies]
 config = "0.13.1"
@@ -11,7 +11,7 @@ log4rs = "1.0.0"
 
 tokio = { version = "1.17.0", features = ["full"] }
 futures-util = "0.3.21"
-futures-intrusive = "0.4.0"
+futures-intrusive = {git="https://github.com/Matthias247/futures-intrusive.git", branch="master"}
 futures = "0.3.21"
 
 actix = "0.13.0"
@@ -28,5 +28,5 @@ bytes = "1.1.0"
 prost = "0.10.1"
 serde = "1.0.136"
 serde_derive = "1.0.136"
-maxwell-protocol = {git="https://github.com/maxwell-dev/maxwell-protocol-rust.git", tag="v0.7.0"}
+maxwell-protocol = {git="https://github.com/maxwell-dev/maxwell-protocol-rust.git", tag="v0.8.0"}
 maxwell-utils = {git="https://github.com/maxwell-dev/maxwell-utils-rust.git", tag="v0.6.0"}
