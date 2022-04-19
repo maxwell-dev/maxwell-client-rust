@@ -958,9 +958,9 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"
-version = "0.2.123"
+version = "0.2.124"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb691a747a7ab48abc15c5b42066eaafde10dc427e3b6ee2a1cf43db04c763bd"
+checksum = "21a41fed9d98f27ab1c6d161da622a4fa35e8a54a8adc24bbf3ddd0ef70b0e50"
 
 [[package]]
 name = "linked-hash-map"
@@ -1053,7 +1053,7 @@ checksum = "a3e378b66a060d48947b590737b30a1be76706c8dd7b8ba0f2fe3989c68a853f"
 
 [[package]]
 name = "maxwell-client"
-version = "0.6.6"
+version = "0.7.0"
 dependencies = [
  "actix",
  "actix-codec",
@@ -1081,21 +1081,23 @@ dependencies = [
 
 [[package]]
 name = "maxwell-protocol"
-version = "0.6.10"
-source = "git+https://github.com/maxwell-dev/maxwell-protocol-rust.git?tag=v0.6.10#c4f53cf5aba02aa2d8f9b747e1ce575ecea373fc"
+version = "0.7.0"
+source = "git+https://github.com/maxwell-dev/maxwell-protocol-rust.git?tag=v0.7.0#07ea56a3f6e301c6c28945af00ae7b6fb18a9707"
 dependencies = [
+ "actix",
  "bytes",
  "prost",
 ]
 
 [[package]]
 name = "maxwell-utils"
-version = "0.5.1"
-source = "git+https://github.com/maxwell-dev/maxwell-utils-rust.git?tag=v0.5.1#d49fc95097b2d0213b0b41a318b9b070dc9484d3"
+version = "0.6.0"
+source = "git+https://github.com/maxwell-dev/maxwell-utils-rust.git?tag=v0.6.0#2992d703b1bb0e3d16c43dab57853170b658d8b5"
 dependencies = [
  "actix",
  "dycovec",
  "num_cpus",
+ "once_cell",
 ]
 
 [[package]]

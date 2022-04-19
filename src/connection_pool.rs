@@ -1,48 +1,51 @@
 use crate::connection::Connection;
 use actix::prelude::*;
 use dycovec::DycoVec;
-use maxwell_utils::ArbiterPool;
 use std::sync::{
-    atomic::{AtomicU8, Ordering},
-    Arc,
+  atomic::{AtomicU8, Ordering},
+  Arc,
 };
 
-const MAX_SIZE: u8 = 16;
+#[derive(Debug, Copy, Clone)]
+pub struct Options {
+  size: u8,
+  //   min_size: u8,
+  //   max_size: u8,
+}
+
+impl Default for Options {
+  fn default() -> Self {
+    Options { size: 8 /*min_size: 1, max_size: 16*/ }
+  }
+}
 
 pub struct ConnectionPool {
-    endpoint: String,
-    connections: DycoVec<Arc<Addr<Connection>>>,
-    index_seed: AtomicU8,
-    arbiter_pool: Arc<ArbiterPool>,
+  endpoint: String,
+  connections: DycoVec<Arc<Addr<Connection>>>,
+  index_seed: AtomicU8,
 }
 
 impl ConnectionPool {
-    pub fn new(endpoint: String, arbiter_pool: Arc<ArbiterPool>) -> Self {
-        let connections = DycoVec::<Arc<Addr<Connection>>>::new();
-        for _ in 0..MAX_SIZE {
-            connections.push(Arc::new(Connection::start(
-                endpoint.clone(),
-                &arbiter_pool.fetch_arbiter().handle(),
-            )));
-        }
-        ConnectionPool { endpoint, connections, index_seed: AtomicU8::new(0), arbiter_pool }
+  pub fn new(endpoint: String, options: Options) -> Self {
+    let connections = DycoVec::<Arc<Addr<Connection>>>::new();
+    for _ in 0..options.size {
+      connections.push(Arc::new(Connection::start2(endpoint.clone())));
     }
+    ConnectionPool { endpoint, connections, index_seed: AtomicU8::new(0) }
+  }
 
-    #[inline]
-    pub fn fetch_connection(&mut self) -> Arc<Addr<Connection>> {
-        let index_seed = self.index_seed.fetch_add(1, Ordering::Relaxed);
-        let index = (index_seed % MAX_SIZE) as usize;
-        let connection = &self.connections[index];
-        if connection.connected() {
-            Arc::clone(connection)
-        } else {
-            self.connections[index] = Arc::new(Connection::start(
-                self.endpoint.clone(),
-                &self.arbiter_pool.fetch_arbiter().handle(),
-            ));
-            Arc::clone(&self.connections[index])
-        }
+  #[inline]
+  pub fn fetch_connection(&mut self) -> Arc<Addr<Connection>> {
+    let index_seed = self.index_seed.fetch_add(1, Ordering::Relaxed);
+    let index = (index_seed % self.connections.len() as u8) as usize;
+    let connection = &self.connections[index];
+    if connection.connected() {
+      Arc::clone(connection)
+    } else {
+      self.connections[index] = Arc::new(Connection::start2(self.endpoint.clone()));
+      Arc::clone(&self.connections[index])
     }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,21 +53,20 @@ impl ConnectionPool {
 ////////////////////////////////////////////////////////////////////////////////
 #[cfg(test)]
 mod tests {
-    use std::{
-        sync::atomic::{AtomicU8, Ordering},
-        time::Instant,
-    };
+  use std::{
+    sync::atomic::{AtomicU8, Ordering},
+    time::Instant,
+  };
 
-    #[actix::test]
-    async fn test_fetch_add() {
-        log4rs::init_file("config/log4rs.yaml", Default::default()).unwrap();
-        let val = AtomicU8::new(0);
-        let start = Instant::now();
-        for _i in 0..258 {
-            let next = val.fetch_add(1, Ordering::Relaxed);
-            log::info!("next: {:?}", next);
-        }
-        let spent = Instant::now() - start;
-        log::info!("Spent time: {:?}ms", spent.as_millis());
+  #[actix::test]
+  async fn test_fetch_add() {
+    let val = AtomicU8::new(0);
+    let start = Instant::now();
+    for _i in 0..258 {
+      let next = val.fetch_add(1, Ordering::Relaxed);
+      println!("next: {:?}", next);
     }
+    let spent = Instant::now() - start;
+    println!("Spent time: {:?}ms", spent.as_millis());
+  }
 }
