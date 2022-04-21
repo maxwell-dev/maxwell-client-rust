@@ -2,12 +2,12 @@
 authors = ["Chaoqian Xu <chaoranxu@gmail.com>"]
 edition = "2021"
 name = "maxwell-client"
-version = "0.7.2"
+version = "0.7.3"
 
 [dependencies]
 config = "0.13.1"
 log = "0.4.16"
-log4rs = "1.1.0"
+log4rs = {git="https://github.com/estk/log4rs.git", branch="master"}
 
 tokio = { version = "1.17.0", features = ["full"] }
 futures-util = "0.3.21"
