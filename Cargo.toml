@@ -5,28 +5,28 @@ name = "maxwell-client"
 version = "0.7.5"
 
 [dependencies]
-config = "0.13.1"
+config = "0.13.2"
 log = "0.4.17"
-log4rs = "1.1.1"
+log4rs = "1.2.0"
 
-futures = "0.3.21"
-futures-intrusive = {git = "https://github.com/Matthias247/futures-intrusive.git", rev = "11e1e1c7dfa2a22057fd0848ec9fd7147ab2ef95"}
-futures-util = "0.3.21"
-tokio = { version = "1.18.2", features = ["full"] }
+futures = "0.3.25"
+futures-intrusive = "0.5.0"
+futures-util = "0.3.25"
+tokio = { version = "1.21.2", features = ["full"] }
 
 actix = "0.13.0"
 actix-codec = "0.5.0"
-actix-web = "4.0.1"
+actix-web = "4.2.1"
 actix-web-actors = "4.1.0"
-awc = "3.0.0"
+awc = "3.0.1"
 
-ahash = "0.7.6"
-bytes = "1.1.0"
-dashmap = "5.3.3"
+ahash = "0.8.2"
+bytes = "1.2.1"
+dashmap = "5.4.0"
 dycovec = "0.1.1"
-maxwell-protocol = {git = "https://github.com/maxwell-dev/maxwell-protocol-rust.git", tag = "v0.9.0"}
-maxwell-utils = {git = "https://github.com/maxwell-dev/maxwell-utils-rust.git", tag = "v0.6.0"}
-num_cpus = "1.13.1"
-prost = "0.10.3"
-serde = "1.0.137"
-serde_derive = "1.0.137"
+maxwell-protocol = { git = "https://github.com/maxwell-dev/maxwell-protocol-rust.git", tag = "v0.9.1" }
+maxwell-utils = { git = "https://github.com/maxwell-dev/maxwell-utils-rust.git", tag = "v0.6.0" }
+num_cpus = "1.14.0"
+prost = "0.11.2"
+serde = "1.0.147"
+serde_derive = "1.0.147"
