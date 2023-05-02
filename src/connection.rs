@@ -1,3 +1,14 @@
+use std::{
+  cell::{Cell, RefCell},
+  collections::{HashMap, HashSet},
+  future::Future,
+  pin::Pin,
+  rc::Rc,
+  sync::atomic::{AtomicU32, Ordering},
+  task::{Context as TaskContext, Poll, Waker},
+  time::Duration,
+};
+
 use actix::{
   prelude::{Request, *},
   Addr, Message as ActixMessage,
@@ -13,16 +24,6 @@ use futures_util::{
 };
 use maxwell_protocol::{self, ProtocolMsg, SendError, *};
 use maxwell_utils::ArbiterPool;
-use std::{
-  cell::{Cell, RefCell},
-  collections::{HashMap, HashSet},
-  future::Future,
-  pin::Pin,
-  rc::Rc,
-  sync::atomic::{AtomicU32, Ordering},
-  task::{Context as TaskContext, Poll, Waker},
-  time::Duration,
-};
 use tokio::time::{sleep, timeout};
 
 static ID_SEED: AtomicU32 = AtomicU32::new(0);
@@ -138,7 +139,7 @@ impl ConnectionInner {
   pub async fn send(self: Rc<Self>, mut msg: ProtocolMsg) -> Result<ProtocolMsg, SendError> {
     let round_ref = self.next_round_ref();
     let round_completer = RoundCompleter::new(round_ref, Rc::clone(&self));
-    let msg = maxwell_protocol::set_round_ref(&mut msg, round_ref);
+    let msg = maxwell_protocol::set_ref(&mut msg, round_ref);
 
     if !self.is_connected() {
       self.connected_event.wait().await;
@@ -169,7 +170,7 @@ impl ConnectionInner {
           Ok(frame) => match frame {
             Frame::Binary(bytes) => {
               let response = maxwell_protocol::decode(&bytes).unwrap();
-              let round_ref = maxwell_protocol::get_round_ref(&response);
+              let round_ref = maxwell_protocol::get_ref(&response);
               let mut round_attachments = self.round_attachments.borrow_mut();
               if let Some(attachment) = round_attachments.get_mut(&round_ref) {
                 attachment.response = Some(response);
@@ -445,10 +446,12 @@ impl TimeoutExt for Request<Connection, ProtocolMsg> {
 ////////////////////////////////////////////////////////////////////////////////
 #[cfg(test)]
 mod tests {
-  use crate::connection::{Connection, TimeoutExt};
+  use std::time::Duration;
+
   use actix::prelude::*;
   use maxwell_protocol::IntoEnum;
-  use std::time::Duration;
+
+  use crate::connection::{Connection, TimeoutExt};
 
   #[actix::test]
   async fn test_send_msg() {

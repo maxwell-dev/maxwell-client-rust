@@ -1,10 +1,12 @@
-use crate::connection::Connection;
-use actix::prelude::*;
-use dycovec::DycoVec;
 use std::sync::{
   atomic::{AtomicU8, Ordering},
   Arc,
 };
+
+use actix::prelude::*;
+use dycovec::DycoVec;
+
+use crate::connection::Connection;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Options {

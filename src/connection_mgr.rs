@@ -1,11 +1,13 @@
+use std::sync::Arc;
+
+use actix::prelude::*;
+use ahash::RandomState as AHasher;
+use dashmap::DashMap;
+
 use crate::{
   connection::Connection,
   connection_pool::{ConnectionPool, Options as PoolOptions},
 };
-use actix::prelude::*;
-use ahash::RandomState as AHasher;
-use dashmap::DashMap;
-use std::sync::Arc;
 
 pub struct ConnectionMgr {
   pool_options: PoolOptions,
@@ -39,14 +41,16 @@ impl Default for ConnectionMgr {
 ////////////////////////////////////////////////////////////////////////////////
 #[cfg(test)]
 mod tests {
-  use crate::{connection::Connection, connection_mgr::ConnectionMgr};
-  use actix::prelude::*;
-  use maxwell_protocol::{IntoEnum, PingReq};
   use std::{
     sync::Arc,
     time::{Duration, Instant},
   };
+
+  use actix::prelude::*;
+  use maxwell_protocol::{IntoEnum, PingReq};
   use tokio::time::sleep;
+
+  use crate::{connection::Connection, connection_mgr::ConnectionMgr};
 
   #[actix::test]
   async fn fetch_connection() {
