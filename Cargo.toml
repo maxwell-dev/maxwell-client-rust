@@ -2,7 +2,7 @@
 authors = ["Chaoqian Xu <chaoranxu@gmail.com>"]
 edition = "2021"
 name = "maxwell-client"
-version = "0.8.0"
+version = "0.8.1"
 
 [dependencies]
 log = "0.4.17"
@@ -22,7 +22,7 @@ ahash = "0.8.3"
 bytes = "1.4.0"
 dashmap = "5.4.0"
 dycovec = "0.1.1"
-maxwell-protocol = {git = "https://github.com/maxwell-dev/maxwell-protocol-rust.git", tag = "v0.10.0"}
+maxwell-protocol = {git = "https://github.com/maxwell-dev/maxwell-protocol-rust.git", tag = "v0.10.1"}
 maxwell-utils = {git = "https://github.com/maxwell-dev/maxwell-utils-rust.git", tag = "v0.6.0"}
 num_cpus = "1.15.0"
 prost = "0.11.9"
